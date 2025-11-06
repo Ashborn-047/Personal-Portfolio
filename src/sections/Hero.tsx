@@ -1,7 +1,7 @@
 import React from 'react';
 
-// Hero background image path
-const HERO_BG_PATH = '/hero-bg.png';
+// Hero background image path - using base URL for GitHub Pages
+const HERO_BG_PATH = `${import.meta.env.BASE_URL}hero-bg.png`;
 
 export const Hero = () => {
   return (

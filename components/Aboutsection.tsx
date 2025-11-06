@@ -6,7 +6,7 @@ import { useEmberCursor } from '../src/hooks/useEmberCursor';
 // ASSET_ABOUT_AVATAR: Replace with a path to your custom animated/illustrated avatar.
 // The avatar should be a stylized cartoon/anime character representing a creative technologist,
 // with a thoughtful vibe, possibly surrounded by faint visual motifs like gears or circuits.
-const ASSET_ABOUT_AVATAR = '/creator-avatar.png';
+const ASSET_ABOUT_AVATAR = `${import.meta.env.BASE_URL}creator-avatar.png`;
 
 const AboutSection: React.FC = () => {
   const cardRef = useEmberCursor();
