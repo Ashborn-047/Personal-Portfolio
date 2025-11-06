@@ -16,7 +16,6 @@ const EmberBackground: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const embersRef = useRef<Ember[]>([]);
-  const [mousePos, setMousePos] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
   const [embers, setEmbers] = useState<Ember[]>([]);
 
   const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
@@ -39,13 +38,6 @@ const EmberBackground: React.FC = () => {
     embersRef.current = initialEmbers;
     setEmbers(initialEmbers);
 
-    // Mouse tracking
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-
     // Animation loop
     const animate = (timestamp: number) => {
       if (!containerRef.current) return;
@@ -54,16 +46,6 @@ const EmberBackground: React.FC = () => {
         // Update position
         let newX = ember.x + ember.vx;
         let newY = ember.y + ember.vy;
-
-        // Cursor attraction (subtle)
-        const dx = mousePos.x - ember.x;
-        const dy = mousePos.y - ember.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 200 && distance > 0) {
-          const attraction = (200 - distance) / 200 * 0.02;
-          ember.vx += (dx / distance) * attraction;
-          ember.vy += (dy / distance) * attraction;
-        }
 
         // Boundary wrapping
         if (newX < 0) newX = window.innerWidth;
@@ -97,19 +79,17 @@ const EmberBackground: React.FC = () => {
         }
       });
 
-
       animationFrameRef.current = requestAnimationFrame(animate);
     };
 
     animationFrameRef.current = requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [mousePos]);
+  }, []);
 
   return (
     <div

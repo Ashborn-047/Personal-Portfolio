@@ -46,13 +46,18 @@ const Header: React.FC = React.memo(() => {
         <Logo />
         <div className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
-            <a
+            <motion.a
               key={link.name}
               href={link.href}
-              className="font-medium text-[#E4E0F5] hover:text-[#FF7B5C] transition-all duration-300 ember-glow-hover"
+              className="relative font-medium text-[#E4E0F5] px-4 py-2 transition-all duration-300 group"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              {link.name}
-            </a>
+              {/* Text with color transition and faded glow */}
+              <span className="relative z-10 group-hover:text-[#FF7B5C] transition-colors duration-300 group-hover:drop-shadow-[0_0_8px_rgba(255,123,92,0.5)]">
+                {link.name}
+              </span>
+            </motion.a>
           ))}
         </div>
       </nav>
