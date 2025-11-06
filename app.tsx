@@ -1,6 +1,6 @@
 import React from 'react';
 import Header from './components/Header';
-import AboutSection from './components/AboutSection';
+import AboutSection from './components/Aboutsection';
 import PhilosophySection from './components/PhilosophySection';
 import ProjectsSection from './components/ProjectsSection';
 import InsightsSection from './components/InsightsSection';
