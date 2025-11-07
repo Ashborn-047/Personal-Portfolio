@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface Ember {
   x: number;
@@ -16,12 +16,14 @@ const EmberBackground: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const embersRef = useRef<Ember[]>([]);
-  const [embers, setEmbers] = useState<Ember[]>([]);
 
   const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
 
   useEffect(() => {
-    // Initialize embers
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Initialize embers and create DOM elements
     const emberCount = 50;
     const initialEmbers: Ember[] = Array.from({ length: emberCount }, () => ({
       x: Math.random() * window.innerWidth,
@@ -36,7 +38,16 @@ const EmberBackground: React.FC = () => {
     }));
     
     embersRef.current = initialEmbers;
-    setEmbers(initialEmbers);
+
+    // Create DOM elements for each ember
+    initialEmbers.forEach((ember) => {
+      const div = document.createElement('div');
+      div.className = 'absolute rounded-full blur-sm';
+      div.style.transform = 'translate(-50%, -50%)';
+      div.style.filter = 'blur(1px)';
+      div.style.boxShadow = `0 0 ${Math.random() * 10 + 6}px currentColor`;
+      container.appendChild(div);
+    });
 
     // Animation loop
     const animate = (timestamp: number) => {
@@ -88,6 +99,10 @@ const EmberBackground: React.FC = () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      // Clean up DOM elements
+      if (container) {
+        container.innerHTML = '';
+      }
     };
   }, []);
 
@@ -96,19 +111,7 @@ const EmberBackground: React.FC = () => {
       id="ember-bg"
       ref={containerRef}
       className="fixed inset-0 z-10 pointer-events-none"
-    >
-      {embers.map((_, index) => (
-        <div
-          key={index}
-          className="absolute rounded-full blur-sm"
-          style={{
-            boxShadow: `0 0 ${Math.random() * 10 + 6}px currentColor`,
-            transform: 'translate(-50%, -50%)',
-            filter: 'blur(1px)',
-          }}
-        />
-      ))}
-    </div>
+    />
   );
 };
 
