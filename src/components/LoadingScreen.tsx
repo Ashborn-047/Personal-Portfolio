@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, useAnimation, AnimatePresence } from 'framer-motion';
 
 interface LoadingScreenProps {
@@ -39,7 +39,6 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
   const trailAnimationRef = useRef<number | null>(null);
   const embersRef = useRef<Ember[]>([]);
   const trailEmbersRef = useRef<TrailEmber[]>([]);
-  const [embers, setEmbers] = useState<Ember[]>([]);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const mouseMoveThrottleRef = useRef(0);
 
@@ -47,6 +46,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
 
   // Initialize ember particles
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     const emberCount = 40;
     const initialEmbers: Ember[] = Array.from({ length: emberCount }, () => ({
       x: Math.random() * window.innerWidth,
@@ -61,7 +63,16 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
     }));
 
     embersRef.current = initialEmbers;
-    setEmbers(initialEmbers);
+
+    // Create DOM elements for each ember
+    initialEmbers.forEach((ember) => {
+      const div = document.createElement('div');
+      div.className = 'ember-particle absolute rounded-full blur-sm';
+      div.style.transform = 'translate(-50%, -50%)';
+      div.style.filter = 'blur(1px)';
+      div.style.boxShadow = `0 0 ${Math.random() * 10 + 6}px currentColor`;
+      container.appendChild(div);
+    });
 
     // Animation loop for particles
     const animate = (timestamp: number) => {
@@ -107,6 +118,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+      }
+      // Clean up DOM elements
+      if (container) {
+        // Only remove ember particles, not other children
+        const emberParticles = container.querySelectorAll('.ember-particle');
+        emberParticles.forEach((particle) => particle.remove());
       }
     };
   }, []);
@@ -312,18 +329,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
           }}
         />
 
-        {/* Ember particles overlay */}
-        {embers.map((_, index) => (
-          <div
-            key={index}
-            className="ember-particle absolute rounded-full blur-sm"
-            style={{
-              boxShadow: `0 0 ${Math.random() * 10 + 6}px currentColor`,
-              transform: 'translate(-50%, -50%)',
-              filter: 'blur(1px)',
-            }}
-          />
-        ))}
+        {/* Ember particles overlay - created via DOM manipulation */}
 
         {/* Cursor trail container */}
         <div

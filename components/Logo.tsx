@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 const Logo: React.FC = () => {
-  const [scrollProgress, setScrollProgress] = useState(0);
   const rafRef = useRef<number | null>(null);
-  const progressRef = useRef(0);
+  const progressCircleRef = useRef<SVGCircleElement>(null);
+  const circumferenceRef = useRef(0);
 
   const calculateScrollProgress = useCallback(() => {
     const windowHeight = window.innerHeight;
@@ -12,9 +12,10 @@ const Logo: React.FC = () => {
     const scrollTop = window.scrollY || document.documentElement.scrollTop;
     const scrollableHeight = documentHeight - windowHeight;
     
+    if (!progressCircleRef.current) return;
+    
     if (scrollableHeight <= 0) {
-      progressRef.current = 0;
-      setScrollProgress(0);
+      progressCircleRef.current.style.strokeDashoffset = `${circumferenceRef.current}`;
       return;
     }
 
@@ -25,8 +26,9 @@ const Logo: React.FC = () => {
       ? 2 * rawProgress * rawProgress
       : 1 - Math.pow(-2 * rawProgress + 2, 2) / 2;
     
-    progressRef.current = easedProgress;
-    setScrollProgress(easedProgress);
+    // Update strokeDashoffset directly without triggering React re-render
+    const strokeDashoffset = circumferenceRef.current * (1 - easedProgress);
+    progressCircleRef.current.style.strokeDashoffset = `${strokeDashoffset}`;
   }, []);
 
   const handleScroll = useCallback(() => {
@@ -37,6 +39,10 @@ const Logo: React.FC = () => {
   }, [calculateScrollProgress]);
 
   useEffect(() => {
+    // Calculate circumference once
+    const radius = 15;
+    circumferenceRef.current = 2 * Math.PI * radius;
+    
     // Initial calculation
     calculateScrollProgress();
     
@@ -65,7 +71,6 @@ const Logo: React.FC = () => {
   const center = size / 2;
   const radius = 15;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference * (1 - scrollProgress);
 
   return (
     <motion.a 
@@ -111,6 +116,7 @@ const Logo: React.FC = () => {
         
         {/* Progress ring (fills with scroll) */}
         <circle
+          ref={progressCircleRef}
           cx={center}
           cy={center}
           r={radius}
@@ -119,7 +125,7 @@ const Logo: React.FC = () => {
           fill="none"
           strokeLinecap="round"
           strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
+          strokeDashoffset={circumference}
           transform={`rotate(-90 ${center} ${center})`}
           style={{
             transition: 'stroke-dashoffset 0.1s ease-out',
