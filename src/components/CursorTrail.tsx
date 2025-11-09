@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface TrailEmber {
   x: number;
@@ -12,128 +12,145 @@ interface TrailEmber {
   color: string;
 }
 
+const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
+const friction = 0.92;
+const opacityDecay = 0.94;
+const maxParticles = 120;
+
 const CursorTrail: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const trailEmbersRef = useRef<TrailEmber[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const particlesRef = useRef<TrailEmber[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const mouseMoveThrottleRef = useRef(0);
+  const devicePixelRatioRef = useRef(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
 
-  const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
+  const ensureCanvasSize = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof window === 'undefined') return;
+
+    const { innerWidth, innerHeight, devicePixelRatio = 1 } = window;
+    devicePixelRatioRef.current = devicePixelRatio;
+    canvas.width = innerWidth * devicePixelRatio;
+    canvas.height = innerHeight * devicePixelRatio;
+    canvas.style.width = `${innerWidth}px`;
+    canvas.style.height = `${innerHeight}px`;
+  };
+
+  const drawParticles = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = devicePixelRatioRef.current;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+    particlesRef.current.forEach((particle) => {
+      ctx.beginPath();
+      ctx.globalAlpha = particle.opacity;
+      ctx.fillStyle = particle.color;
+      ctx.shadowColor = particle.color;
+      ctx.shadowBlur = particle.size * 4;
+      ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  };
+
+  const animate = () => {
+    particlesRef.current = particlesRef.current.filter((particle) => {
+      particle.life += 16;
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= friction;
+      particle.vy *= friction;
+      particle.opacity *= opacityDecay;
+
+      return particle.life < particle.maxLife && particle.opacity > 0.08;
+    });
+
+    if (particlesRef.current.length) {
+      drawParticles();
+      animationFrameRef.current = requestAnimationFrame(animate);
+    } else {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      animationFrameRef.current = null;
+    }
+  };
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // Throttle ember creation for performance
-      mouseMoveThrottleRef.current++;
-      if (mouseMoveThrottleRef.current % 2 !== 0) return; // Create ember every other mouse move
+    if (typeof window === 'undefined') return;
 
-      const currentX = e.clientX;
-      const currentY = e.clientY;
-      
-      // Calculate movement direction for realistic trail
-      const dx = currentX - lastMousePosRef.current.x;
-      const dy = currentY - lastMousePosRef.current.y;
-      const speed = Math.sqrt(dx * dx + dy * dy);
-      
-      // Create 1-2 embers per movement
-      const emberCount = speed > 10 ? 2 : 1;
-      
-      for (let i = 0; i < emberCount; i++) {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) return;
+
+    ensureCanvasSize();
+    window.addEventListener('resize', ensureCanvasSize);
+
+    const scheduleAnimation = () => {
+      if (animationFrameRef.current === null) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      mouseMoveThrottleRef.current = (mouseMoveThrottleRef.current + 1) % 2;
+      if (mouseMoveThrottleRef.current !== 0) return;
+
+      const { clientX, clientY } = event;
+      const dx = clientX - lastMousePosRef.current.x;
+      const dy = clientY - lastMousePosRef.current.y;
+      const speed = Math.hypot(dx, dy);
+      const particleCount = speed > 10 ? 2 : 1;
+
+      for (let i = 0; i < particleCount; i++) {
         const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.5;
         const spread = Math.random() * 0.3;
-        
-        const trailEmber: TrailEmber = {
-          x: currentX + Math.cos(angle) * spread * 5,
-          y: currentY + Math.sin(angle) * spread * 5,
-          vx: Math.cos(angle) * (Math.random() * 0.5 + 0.3) + (Math.random() - 0.5) * 0.2,
-          vy: Math.sin(angle) * (Math.random() * 0.5 + 0.3) + (Math.random() - 0.5) * 0.2,
-          size: Math.random() * 3 + 2,
-          opacity: Math.random() * 0.6 + 0.4,
+
+        particlesRef.current.push({
+          x: clientX + Math.cos(angle) * spread * 6,
+          y: clientY + Math.sin(angle) * spread * 6,
+          vx: Math.cos(angle) * (Math.random() * 0.9 + 0.4) + (Math.random() - 0.5) * 0.3,
+          vy: Math.sin(angle) * (Math.random() * 0.9 + 0.4) + (Math.random() - 0.5) * 0.3,
+          size: Math.random() * 1.8 + 1.6,
+          opacity: Math.random() * 0.5 + 0.5,
           life: 0,
-          maxLife: Math.random() * 400 + 300, // 300-700ms lifespan
+          maxLife: Math.random() * 450 + 250,
           color: colors[Math.floor(Math.random() * colors.length)],
-        };
-        
-        trailEmbersRef.current.push(trailEmber);
+        });
       }
-      
-      lastMousePosRef.current = { x: currentX, y: currentY };
+
+      if (particlesRef.current.length > maxParticles) {
+        particlesRef.current.splice(0, particlesRef.current.length - maxParticles);
+      }
+
+      lastMousePosRef.current = { x: clientX, y: clientY };
+      scheduleAnimation();
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // Animation loop
-    const animate = () => {
-      if (!containerRef.current) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-        return;
-      }
-
-      // Update and remove dead embers
-      trailEmbersRef.current = trailEmbersRef.current.filter((ember) => {
-        ember.life++;
-        ember.x += ember.vx;
-        ember.y += ember.vy;
-        
-        // Fade out as life increases
-        ember.opacity = Math.max(0, ember.opacity * 0.98);
-        
-        // Slow down over time
-        ember.vx *= 0.98;
-        ember.vy *= 0.98;
-        
-        return ember.life < ember.maxLife && ember.opacity > 0.05;
-      });
-
-      // Update DOM
-      const container = containerRef.current;
-      while (container.children.length < trailEmbersRef.current.length) {
-        const div = document.createElement('div');
-        div.className = 'absolute rounded-full';
-        div.style.transform = 'translate(-50%, -50%)';
-        container.appendChild(div);
-      }
-
-      // Remove excess DOM elements
-      while (container.children.length > trailEmbersRef.current.length) {
-        container.removeChild(container.lastChild!);
-      }
-
-      // Update each ember's position and style
-      trailEmbersRef.current.forEach((ember, index) => {
-        const element = container.children[index] as HTMLElement;
-        if (element) {
-          element.style.left = `${ember.x}px`;
-          element.style.top = `${ember.y}px`;
-          element.style.opacity = ember.opacity.toString();
-          element.style.backgroundColor = ember.color;
-          element.style.width = `${ember.size}px`;
-          element.style.height = `${ember.size}px`;
-          // Increased glow - larger spread and multiple shadow layers for more intensity
-          element.style.boxShadow = `0 0 ${ember.size * 4}px ${ember.color}, 0 0 ${ember.size * 8}px ${ember.color}40, 0 0 ${ember.size * 12}px ${ember.color}20`;
-          element.style.filter = 'blur(0.5px)';
-        }
-      });
-
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(animate);
-
     return () => {
+      window.removeEventListener('resize', ensureCanvasSize);
       window.removeEventListener('mousemove', handleMouseMove);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
     };
   }, []);
 
-  return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-[100] pointer-events-none"
-    />
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 z-[100] pointer-events-none" />;
 };
 
 export default CursorTrail;
