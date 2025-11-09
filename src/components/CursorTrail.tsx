@@ -31,9 +31,9 @@ const getDeviceConfig = () => {
     return {
       maxParticles: 300,
       particleMultiplier: 0.3,
-      sizeMultiplier: 0.7,
-      spreadMultiplier: 0.6,
-      blurMultiplier: 0.7,
+      sizeMultiplier: 1, // Same size as desktop for similar visual appearance
+      spreadMultiplier: 0.7, // Slightly less spread but still visible
+      blurMultiplier: 0.8, // Slightly less blur but still effective
     };
   } else if (width < 1024) {
     // Tablet

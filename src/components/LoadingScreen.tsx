@@ -34,8 +34,8 @@ const getDeviceConfig = () => {
     // Mobile
     return {
       particleCount: 40,
-      sizeMultiplier: 0.7,
-      blurMultiplier: 0.7,
+      sizeMultiplier: 1, // Same size as desktop for similar visual appearance
+      blurMultiplier: 0.8, // Slightly less blur but still effective
       velocityMultiplier: 0.8,
     };
   } else if (width < 1024) {
