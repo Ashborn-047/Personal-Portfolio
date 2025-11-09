@@ -185,13 +185,7 @@ const CursorTrail: React.FC = () => {
       }
     };
 
-    const handleMouseMove = (event: MouseEvent) => {
-      mouseMoveThrottleRef.current = (mouseMoveThrottleRef.current + 1) % 2;
-      if (mouseMoveThrottleRef.current !== 0) return;
-
-      const { clientX, clientY } = event;
-      const dx = clientX - lastMousePosRef.current.x;
-      const dy = clientY - lastMousePosRef.current.y;
+    const createParticles = (x: number, y: number, dx: number, dy: number) => {
       const speed = Math.hypot(dx, dy);
       const config = deviceConfigRef.current;
       
@@ -207,8 +201,8 @@ const CursorTrail: React.FC = () => {
         const isBlurred = Math.random() < 0.45; // 45% chance of blur
 
         particlesRef.current.push({
-          x: clientX + Math.cos(angle) * spread * 15 * config.spreadMultiplier,
-          y: clientY + Math.sin(angle) * spread * 15 * config.spreadMultiplier,
+          x: x + Math.cos(angle) * spread * 15 * config.spreadMultiplier,
+          y: y + Math.sin(angle) * spread * 15 * config.spreadMultiplier,
           vx: Math.cos(angle) * (Math.random() * 1.5 + 0.6) + (Math.random() - 0.5) * 0.5,
           vy: Math.sin(angle) * (Math.random() * 1.5 + 0.6) + (Math.random() - 0.5) * 0.5,
           size: (Math.random() * 1.2 + 0.6) * config.sizeMultiplier,
@@ -225,15 +219,96 @@ const CursorTrail: React.FC = () => {
         particlesRef.current.splice(0, particlesRef.current.length - config.maxParticles);
       }
 
-      lastMousePosRef.current = { x: clientX, y: clientY };
       scheduleAnimation();
     };
 
+    const handleMouseMove = (event: MouseEvent) => {
+      mouseMoveThrottleRef.current = (mouseMoveThrottleRef.current + 1) % 2;
+      if (mouseMoveThrottleRef.current !== 0) return;
+
+      const { clientX, clientY } = event;
+      const dx = clientX - lastMousePosRef.current.x;
+      const dy = clientY - lastMousePosRef.current.y;
+      
+      createParticles(clientX, clientY, dx, dy);
+      lastMousePosRef.current = { x: clientX, y: clientY };
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (touch) {
+        lastMousePosRef.current = { x: touch.clientX, y: touch.clientY };
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      mouseMoveThrottleRef.current = (mouseMoveThrottleRef.current + 1) % 3;
+      if (mouseMoveThrottleRef.current !== 0) return;
+
+      const touch = event.touches[0];
+      if (!touch) return;
+
+      const { clientX, clientY } = touch;
+      const dx = clientX - lastMousePosRef.current.x;
+      const dy = clientY - lastMousePosRef.current.y;
+      
+      // Only create particles if touch moved significantly
+      if (Math.hypot(dx, dy) > 3) {
+        createParticles(clientX, clientY, dx, dy);
+        lastMousePosRef.current = { x: clientX, y: clientY };
+      }
+    };
+
+    const handleScroll = () => {
+      // Create particles at random positions while scrolling on mobile
+      const config = deviceConfigRef.current;
+      if (config.particleMultiplier < 0.5) { // Only on mobile/tablet
+        const scrollThrottle = Math.floor(Math.random() * 3);
+        if (scrollThrottle === 0) {
+          const x = Math.random() * window.innerWidth;
+          const y = Math.random() * window.innerHeight;
+          const particleCount = Math.floor(2 * config.particleMultiplier);
+          
+          for (let i = 0; i < particleCount; i++) {
+            const isStar = Math.random() < 0.55;
+            const isBlurred = Math.random() < 0.45;
+            const spread = Math.random() * 20 * config.spreadMultiplier;
+            const angle = Math.random() * Math.PI * 2;
+
+            particlesRef.current.push({
+              x: x + Math.cos(angle) * spread,
+              y: y + Math.sin(angle) * spread,
+              vx: (Math.random() - 0.5) * 0.5,
+              vy: (Math.random() - 0.5) * 0.5,
+              size: (Math.random() * 1.2 + 0.6) * config.sizeMultiplier,
+              opacity: Math.random() * 0.4 + 0.3,
+              life: 0,
+              maxLife: Math.random() * 400 + 300,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              isStar,
+              blurAmount: isBlurred ? (Math.random() * 4 + 2) * config.blurMultiplier : 0,
+            });
+          }
+
+          if (particlesRef.current.length > config.maxParticles) {
+            particlesRef.current.splice(0, particlesRef.current.length - config.maxParticles);
+          }
+          scheduleAnimation();
+        }
+      }
+    };
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('resize', ensureCanvasSize);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('scroll', handleScroll);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
