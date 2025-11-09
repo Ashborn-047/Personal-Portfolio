@@ -49,14 +49,20 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen font-sans leading-relaxed">
       {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
-      <div style={{ 
-        opacity: isLoading ? 0 : 1, 
-        visibility: isLoading ? 'hidden' : 'visible',
-        transition: 'opacity 0.8s ease-in-out, visibility 0.8s ease-in-out',
-        willChange: 'opacity'
-      }}>
-        <EmberBackground />
-        <CursorTrail />
+      {!isLoading && (
+        <>
+          <EmberBackground />
+          <CursorTrail />
+        </>
+      )}
+      <div
+        style={{
+          opacity: isLoading ? 0 : 1,
+          visibility: isLoading ? 'hidden' : 'visible',
+          transition: 'opacity 0.8s ease-in-out, visibility 0.8s ease-in-out',
+          willChange: 'opacity',
+        }}
+      >
         <Header />
         <Hero />
         <main className="container mx-auto px-6 md:px-12 lg:px-24">

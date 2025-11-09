@@ -5,7 +5,7 @@ interface LoadingScreenProps {
   onComplete: () => void;
 }
 
-interface Ember {
+type Ember = {
   x: number;
   y: number;
   vx: number;
@@ -15,241 +15,230 @@ interface Ember {
   color: string;
   flickerSpeed: number;
   flickerOffset: number;
-}
+  blurAmount: number;
+  depth: number; // 0 = far, 1 = close
+  isStar: boolean; // Whether to draw star-like effect
+};
 
-interface TrailEmber {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  opacity: number;
-  life: number;
-  maxLife: number;
-  color: string;
-}
+const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
+
+// Responsive configuration
+const getDeviceConfig = () => {
+  if (typeof window === 'undefined') {
+    return { particleCount: 100, sizeMultiplier: 1, blurMultiplier: 1, velocityMultiplier: 1 };
+  }
+  
+  const width = window.innerWidth;
+  
+  if (width < 768) {
+    // Mobile
+    return {
+      particleCount: 40,
+      sizeMultiplier: 0.7,
+      blurMultiplier: 0.7,
+      velocityMultiplier: 0.8,
+    };
+  } else if (width < 1024) {
+    // Tablet
+    return {
+      particleCount: 70,
+      sizeMultiplier: 0.85,
+      blurMultiplier: 0.85,
+      velocityMultiplier: 0.9,
+    };
+  } else {
+    // Desktop
+    return {
+      particleCount: 100,
+      sizeMultiplier: 1,
+      blurMultiplier: 1,
+      velocityMultiplier: 1,
+    };
+  }
+};
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
   const lineControls = useAnimation();
   const bgControls = useAnimation();
   const containerControls = useAnimation();
   const containerRef = useRef<HTMLDivElement>(null);
-  const trailContainerRef = useRef<HTMLDivElement>(null);
+  const emberCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const trailAnimationRef = useRef<number | null>(null);
   const embersRef = useRef<Ember[]>([]);
-  const trailEmbersRef = useRef<TrailEmber[]>([]);
-  const lastMousePosRef = useRef({ x: 0, y: 0 });
-  const mouseMoveThrottleRef = useRef(0);
+  const devicePixelRatioRef = useRef(
+    typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+  );
+  const deviceConfigRef = useRef(getDeviceConfig());
 
-  const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
+  const ensureCanvasSize = () => {
+    const canvas = emberCanvasRef.current;
+    if (!canvas || typeof window === 'undefined') return;
 
-  // Initialize ember particles
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
+    const { innerWidth, innerHeight, devicePixelRatio = 1 } = window;
+    devicePixelRatioRef.current = devicePixelRatio;
+    canvas.width = innerWidth * devicePixelRatio;
+    canvas.height = innerHeight * devicePixelRatio;
+    canvas.style.width = `${innerWidth}px`;
+    canvas.style.height = `${innerHeight}px`;
+    
+    // Update device config on resize
+    deviceConfigRef.current = getDeviceConfig();
+  };
 
-    const emberCount = 40;
-    const initialEmbers: Ember[] = Array.from({ length: emberCount }, () => ({
-      x: Math.random() * window.innerWidth,
-      y: Math.random() * window.innerHeight,
-      vx: (Math.random() - 0.5) * 0.15,
-      vy: (Math.random() - 0.5) * 0.15,
-      size: Math.random() * 5 + 3,
-      baseOpacity: Math.random() * 0.5 + 0.3,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      flickerSpeed: Math.random() * 0.02 + 0.01,
-      flickerOffset: Math.random() * Math.PI * 2,
-    }));
+  const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, opacity: number, color: string) => {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = Math.max(0.3, size * 0.2);
+    
+    // Draw 4-pointed star (cross shape) - same as cursor trail
+    const radius = size;
+    ctx.beginPath();
+    ctx.moveTo(x, y - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.moveTo(x - radius, y);
+    ctx.lineTo(x + radius, y);
+    ctx.stroke();
+    
+    // Draw central glow
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  };
 
-    embersRef.current = initialEmbers;
+  const drawEmbers = (timestamp: number) => {
+    const canvas = emberCanvasRef.current;
+    if (!canvas) return;
 
-    // Create DOM elements for each ember
-    initialEmbers.forEach((ember) => {
-      const div = document.createElement('div');
-      div.className = 'ember-particle absolute rounded-full blur-sm';
-      div.style.transform = 'translate(-50%, -50%)';
-      div.style.filter = 'blur(1px)';
-      div.style.boxShadow = `0 0 ${Math.random() * 10 + 6}px currentColor`;
-      container.appendChild(div);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = devicePixelRatioRef.current;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+    embersRef.current.forEach((ember) => {
+      let newX = ember.x + ember.vx;
+      let newY = ember.y + ember.vy;
+      const width = canvas.width / dpr;
+      const height = canvas.height / dpr;
+
+      if (newX < 0) newX = width;
+      if (newX > width) newX = 0;
+      if (newY < 0) newY = height;
+      if (newY > height) newY = 0;
+
+      ember.x = newX;
+      ember.y = newY;
+      ember.vx *= 0.99;
+      ember.vy *= 0.99;
+
+      const flicker = Math.sin(timestamp * ember.flickerSpeed + ember.flickerOffset) * 0.2;
+      const opacity = Math.max(0.2, Math.min(0.9, ember.baseOpacity + flicker));
+
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = ember.color;
+      ctx.shadowColor = ember.color;
+      
+      // Apply blur effect - same as cursor trail
+      const blurRadius = ember.blurAmount > 0 
+        ? ember.blurAmount + ember.size * 2 
+        : ember.size * 2;
+      ctx.shadowBlur = blurRadius;
+      
+      if (ember.isStar) {
+        // Draw blurred star effect - same as cursor trail
+        drawStar(ctx, ember.x, ember.y, ember.size, opacity, ember.color);
+      } else {
+        // Draw regular glowing circle
+        ctx.beginPath();
+        ctx.arc(ember.x, ember.y, ember.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      ctx.restore();
     });
 
-    // Animation loop for particles
-    const animate = (timestamp: number) => {
-      if (!containerRef.current) return;
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  };
 
-      embersRef.current.forEach((ember) => {
-        let newX = ember.x + ember.vx;
-        let newY = ember.y + ember.vy;
+  const animateEmbers = (timestamp: number) => {
+    drawEmbers(timestamp);
+    animationFrameRef.current = requestAnimationFrame(animateEmbers);
+  };
 
-        // Boundary wrapping
-        if (newX < 0) newX = window.innerWidth;
-        if (newX > window.innerWidth) newX = 0;
-        if (newY < 0) newY = window.innerHeight;
-        if (newY > window.innerHeight) newY = 0;
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
 
-        ember.x = newX;
-        ember.y = newY;
-        ember.vx *= 0.99;
-        ember.vy *= 0.99;
-      });
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) return;
 
-      // Update DOM elements
-      embersRef.current.forEach((ember, index) => {
-        const element = containerRef.current?.children[index] as HTMLElement;
-        if (element && element.classList.contains('ember-particle')) {
-          const flicker = Math.sin(timestamp * ember.flickerSpeed + ember.flickerOffset) * 0.2;
-          const currentOpacity = Math.max(0.3, Math.min(0.9, ember.baseOpacity + flicker));
+    const config = deviceConfigRef.current;
+    
+    embersRef.current = Array.from({ length: config.particleCount }, () => {
+      const depth = Math.random(); // 0 = far, 1 = close
+      const isBlurred = Math.random() < 0.45; // 45% chance of being blurred
+      const isStar = Math.random() < 0.55; // 55% chance of star (more than 50%) - same as cursor trail
+      
+      // Size similar to cursor trail: 0.6-1.8 range, adjusted for device
+      const size = (Math.random() * 1.2 + 0.6) * config.sizeMultiplier;
+      
+      // Blur amount - same as cursor trail, adjusted for device
+      const blurAmount = isBlurred ? (Math.random() * 4 + 2) * config.blurMultiplier : 0;
+      
+      // Opacity
+      const baseOpacity = Math.random() * 0.5 + 0.5;
+      
+      // Color - same palette as cursor trail
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      return {
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.2 * config.velocityMultiplier,
+        vy: (Math.random() - 0.5) * 0.2 * config.velocityMultiplier,
+        size,
+        baseOpacity,
+        color,
+        flickerSpeed: Math.random() * 0.012 + 0.005,
+        flickerOffset: Math.random() * Math.PI * 2,
+        blurAmount,
+        depth,
+        isStar,
+      };
+    });
 
-          element.style.left = `${ember.x}px`;
-          element.style.top = `${ember.y}px`;
-          element.style.opacity = currentOpacity.toString();
-          element.style.backgroundColor = ember.color;
-          element.style.width = `${ember.size}px`;
-          element.style.height = `${ember.size}px`;
-        }
-      });
-
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(animate);
+    ensureCanvasSize();
+    window.addEventListener('resize', ensureCanvasSize);
+    animationFrameRef.current = requestAnimationFrame(animateEmbers);
 
     return () => {
+      window.removeEventListener('resize', ensureCanvasSize);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
-      }
-      // Clean up DOM elements
-      if (container) {
-        // Only remove ember particles, not other children
-        const emberParticles = container.querySelectorAll('.ember-particle');
-        emberParticles.forEach((particle) => particle.remove());
-      }
-    };
-  }, []);
-
-  // Cursor trail effect
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // Throttle ember creation for performance
-      mouseMoveThrottleRef.current++;
-      if (mouseMoveThrottleRef.current % 2 !== 0) return; // Create ember every other mouse move
-
-      const currentX = e.clientX;
-      const currentY = e.clientY;
-      
-      // Calculate movement direction for realistic trail
-      const dx = currentX - lastMousePosRef.current.x;
-      const dy = currentY - lastMousePosRef.current.y;
-      const speed = Math.sqrt(dx * dx + dy * dy);
-      
-      // Create 1-2 embers per movement
-      const emberCount = speed > 10 ? 2 : 1;
-      
-      for (let i = 0; i < emberCount; i++) {
-        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.5;
-        const spread = Math.random() * 0.3;
-        
-        const trailEmber: TrailEmber = {
-          x: currentX + Math.cos(angle) * spread * 5,
-          y: currentY + Math.sin(angle) * spread * 5,
-          vx: Math.cos(angle) * (Math.random() * 0.5 + 0.3) + (Math.random() - 0.5) * 0.2,
-          vy: Math.sin(angle) * (Math.random() * 0.5 + 0.3) + (Math.random() - 0.5) * 0.2,
-          size: Math.random() * 3 + 2,
-          opacity: Math.random() * 0.6 + 0.4,
-          life: 0,
-          maxLife: Math.random() * 400 + 300, // 300-700ms lifespan
-          color: colors[Math.floor(Math.random() * colors.length)],
-        };
-        
-        trailEmbersRef.current.push(trailEmber);
-      }
-      
-      lastMousePosRef.current = { x: currentX, y: currentY };
-    };
-
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-
-    // Animation loop for cursor trail
-    const animateTrail = () => {
-      if (!trailContainerRef.current) {
-        trailAnimationRef.current = requestAnimationFrame(animateTrail);
-        return;
-      }
-
-      // Update and remove dead embers
-      trailEmbersRef.current = trailEmbersRef.current.filter((ember) => {
-        ember.life++;
-        ember.x += ember.vx;
-        ember.y += ember.vy;
-        
-        // Fade out as life increases
-        ember.opacity = Math.max(0, ember.opacity * 0.98);
-        
-        // Slow down over time
-        ember.vx *= 0.98;
-        ember.vy *= 0.98;
-        
-        return ember.life < ember.maxLife && ember.opacity > 0.05;
-      });
-
-      // Update DOM
-      const container = trailContainerRef.current;
-      while (container.children.length < trailEmbersRef.current.length) {
-        const div = document.createElement('div');
-        div.className = 'absolute rounded-full';
-        div.style.transform = 'translate(-50%, -50%)';
-        container.appendChild(div);
-      }
-
-      // Remove excess DOM elements
-      while (container.children.length > trailEmbersRef.current.length) {
-        container.removeChild(container.lastChild!);
-      }
-
-      // Update each ember's position and style
-      trailEmbersRef.current.forEach((ember, index) => {
-        const element = container.children[index] as HTMLElement;
-        if (element) {
-          element.style.left = `${ember.x}px`;
-          element.style.top = `${ember.y}px`;
-          element.style.opacity = ember.opacity.toString();
-          element.style.backgroundColor = ember.color;
-          element.style.width = `${ember.size}px`;
-          element.style.height = `${ember.size}px`;
-          // Increased glow - larger spread and multiple shadow layers for more intensity
-          element.style.boxShadow = `0 0 ${ember.size * 4}px ${ember.color}, 0 0 ${ember.size * 8}px ${ember.color}40, 0 0 ${ember.size * 12}px ${ember.color}20`;
-          element.style.filter = 'blur(0.5px)';
-        }
-      });
-
-      trailAnimationRef.current = requestAnimationFrame(animateTrail);
-    };
-
-    trailAnimationRef.current = requestAnimationFrame(animateTrail);
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      if (trailAnimationRef.current) {
-        cancelAnimationFrame(trailAnimationRef.current);
+        animationFrameRef.current = null;
       }
     };
   }, []);
 
   useEffect(() => {
-    // Disable scroll and pointer events while loading
     document.body.style.overflow = 'hidden';
     document.body.style.pointerEvents = 'none';
 
     const timeline = async () => {
-      // Phase 1: Thin glowing vertical line appears at center (0-0.6s)
       await lineControls.start({
         opacity: 1,
         width: '2px',
         transition: { duration: 0.6, ease: 'easeOut' },
       });
 
-      // Hold line for ~1s with subtle pulsation
       await lineControls.start({
         scale: [1, 1.02, 1],
         transition: {
@@ -258,16 +247,14 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
         },
       });
 
-      // Phase 2: Curtain expands horizontally (1.6-4.1s) - slower and more visible
       await Promise.all([
         lineControls.start({
           width: '100vw',
           transition: {
             duration: 2.5,
-            ease: [0.25, 0.1, 0.25, 1], // Smooth "whoosh" easing
+            ease: [0.25, 0.1, 0.25, 1],
           },
         }),
-        // Background image fades in and shifts upward simultaneously
         bgControls.start({
           opacity: 1,
           y: 0,
@@ -275,27 +262,23 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
           transition: {
             duration: 2.5,
             ease: 'easeOut',
-            delay: 0.3, // Start fading in slightly earlier
+            delay: 0.3,
           },
         }),
       ]);
 
-      // Phase 3: Hold to appreciate the reveal (4.1-4.6s)
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Phase 4: Fade out entire loader (4.6-5.7s) - smoother fade with slight delay before callback
       await containerControls.start({
         opacity: 0,
         transition: {
           duration: 1.1,
-          ease: [0.4, 0, 0.2, 1], // Smooth ease-in-out curve
+          ease: [0.4, 0, 0.2, 1],
         },
       });
 
-      // Small delay to ensure fade completes before showing content
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Re-enable scroll and pointer events
       document.body.style.overflow = '';
       document.body.style.pointerEvents = '';
       onComplete();
@@ -317,7 +300,6 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
         initial={{ opacity: 1 }}
         animate={containerControls}
       >
-        {/* Background wave image with upward motion - visible from start */}
         <motion.div
           className="absolute inset-0"
           initial={{ opacity: 0.3, y: 40, filter: 'blur(4px)' }}
@@ -329,23 +311,20 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
           }}
         />
 
-        {/* Ember particles overlay - created via DOM manipulation */}
-
-        {/* Cursor trail container */}
-        <div
-          ref={trailContainerRef}
+        <canvas
+          ref={emberCanvasRef}
           className="absolute inset-0 pointer-events-none"
           style={{ zIndex: 1 }}
         />
 
-        {/* Expanding curtain line - expands horizontally */}
         <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
             className="h-full relative"
             initial={{ opacity: 0, width: '2px' }}
             animate={lineControls}
             style={{
-              background: 'linear-gradient(to bottom, transparent 0%, rgba(69, 231, 226, 0.15) 20%, rgba(160, 118, 249, 0.15) 50%, rgba(255, 95, 60, 0.15) 80%, transparent 100%)',
+              background:
+                'linear-gradient(to bottom, transparent 0%, rgba(69, 231, 226, 0.15) 20%, rgba(160, 118, 249, 0.15) 50%, rgba(255, 95, 60, 0.15) 80%, transparent 100%)',
               boxShadow: `
                 0 0 20px rgba(69, 231, 226, 0.15),
                 0 0 40px rgba(160, 118, 249, 0.1),
@@ -354,11 +333,11 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
               `,
             }}
           >
-            {/* Outer glow bleed effect - much more subtle */}
             <div
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(to bottom, transparent 0%, rgba(69, 231, 226, 0.1) 20%, rgba(160, 118, 249, 0.1) 50%, rgba(255, 95, 60, 0.1) 80%, transparent 100%)',
+                background:
+                  'linear-gradient(to bottom, transparent 0%, rgba(69, 231, 226, 0.1) 20%, rgba(160, 118, 249, 0.1) 50%, rgba(255, 95, 60, 0.1) 80%, transparent 100%)',
                 filter: 'blur(30px)',
                 transform: 'scaleX(3)',
                 opacity: 0.3,

@@ -10,131 +10,238 @@ interface TrailEmber {
   life: number;
   maxLife: number;
   color: string;
+  isStar: boolean;
+  blurAmount: number;
 }
 
+const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
+const friction = 0.92;
+const opacityDecay = 0.94;
+
+// Responsive configuration
+const getDeviceConfig = () => {
+  if (typeof window === 'undefined') {
+    return { maxParticles: 1800, particleMultiplier: 1, sizeMultiplier: 1, spreadMultiplier: 1, blurMultiplier: 1 };
+  }
+  
+  const width = window.innerWidth;
+  
+  if (width < 768) {
+    // Mobile
+    return {
+      maxParticles: 300,
+      particleMultiplier: 0.3,
+      sizeMultiplier: 0.7,
+      spreadMultiplier: 0.6,
+      blurMultiplier: 0.7,
+    };
+  } else if (width < 1024) {
+    // Tablet
+    return {
+      maxParticles: 800,
+      particleMultiplier: 0.6,
+      sizeMultiplier: 0.85,
+      spreadMultiplier: 0.8,
+      blurMultiplier: 0.85,
+    };
+  } else {
+    // Desktop
+    return {
+      maxParticles: 1800,
+      particleMultiplier: 1,
+      sizeMultiplier: 1,
+      spreadMultiplier: 1,
+      blurMultiplier: 1,
+    };
+  }
+};
+
 const CursorTrail: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const trailEmbersRef = useRef<TrailEmber[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const particlesRef = useRef<TrailEmber[]>([]);
   const animationFrameRef = useRef<number | null>(null);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const mouseMoveThrottleRef = useRef(0);
+  const devicePixelRatioRef = useRef(typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1);
+  const deviceConfigRef = useRef(getDeviceConfig());
 
-  const colors = ['#FF7B5C', '#FF9966', '#FFBBAA'];
+  const ensureCanvasSize = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof window === 'undefined') return;
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      // Throttle ember creation for performance
-      mouseMoveThrottleRef.current++;
-      if (mouseMoveThrottleRef.current % 2 !== 0) return; // Create ember every other mouse move
+    const { innerWidth, innerHeight, devicePixelRatio = 1 } = window;
+    devicePixelRatioRef.current = devicePixelRatio;
+    canvas.width = innerWidth * devicePixelRatio;
+    canvas.height = innerHeight * devicePixelRatio;
+    canvas.style.width = `${innerWidth}px`;
+    canvas.style.height = `${innerHeight}px`;
+    
+    // Update device config on resize
+    deviceConfigRef.current = getDeviceConfig();
+  };
 
-      const currentX = e.clientX;
-      const currentY = e.clientY;
+  const drawStar = (ctx: CanvasRenderingContext2D, x: number, y: number, size: number, opacity: number, color: string) => {
+    ctx.save();
+    ctx.globalAlpha = opacity;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = Math.max(0.3, size * 0.2);
+    
+    // Draw 4-pointed star (cross shape)
+    const radius = size;
+    ctx.beginPath();
+    ctx.moveTo(x, y - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.moveTo(x - radius, y);
+    ctx.lineTo(x + radius, y);
+    ctx.stroke();
+    
+    // Draw central glow
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  };
+
+  const drawParticles = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = devicePixelRatioRef.current;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
+
+    particlesRef.current.forEach((particle) => {
+      ctx.save();
+      ctx.globalAlpha = particle.opacity;
+      ctx.fillStyle = particle.color;
+      ctx.shadowColor = particle.color;
       
-      // Calculate movement direction for realistic trail
-      const dx = currentX - lastMousePosRef.current.x;
-      const dy = currentY - lastMousePosRef.current.y;
-      const speed = Math.sqrt(dx * dx + dy * dy);
+      // Apply blur effect
+      const blurRadius = particle.blurAmount > 0 
+        ? particle.blurAmount + particle.size * 2 
+        : particle.size * 2;
+      ctx.shadowBlur = blurRadius;
       
-      // Create 1-2 embers per movement
-      const emberCount = speed > 10 ? 2 : 1;
-      
-      for (let i = 0; i < emberCount; i++) {
-        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.5;
-        const spread = Math.random() * 0.3;
-        
-        const trailEmber: TrailEmber = {
-          x: currentX + Math.cos(angle) * spread * 5,
-          y: currentY + Math.sin(angle) * spread * 5,
-          vx: Math.cos(angle) * (Math.random() * 0.5 + 0.3) + (Math.random() - 0.5) * 0.2,
-          vy: Math.sin(angle) * (Math.random() * 0.5 + 0.3) + (Math.random() - 0.5) * 0.2,
-          size: Math.random() * 3 + 2,
-          opacity: Math.random() * 0.6 + 0.4,
-          life: 0,
-          maxLife: Math.random() * 400 + 300, // 300-700ms lifespan
-          color: colors[Math.floor(Math.random() * colors.length)],
-        };
-        
-        trailEmbersRef.current.push(trailEmber);
+      if (particle.isStar) {
+        // Draw blurred star effect
+        drawStar(ctx, particle.x, particle.y, particle.size, particle.opacity, particle.color);
+      } else {
+        // Draw regular glowing circle
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
       }
       
-      lastMousePosRef.current = { x: currentX, y: currentY };
+      ctx.restore();
+    });
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+  };
+
+  const animate = () => {
+    particlesRef.current = particlesRef.current.filter((particle) => {
+      particle.life += 16;
+      particle.x += particle.vx;
+      particle.y += particle.vy;
+      particle.vx *= friction;
+      particle.vy *= friction;
+      particle.opacity *= opacityDecay;
+
+      return particle.life < particle.maxLife && particle.opacity > 0.08;
+    });
+
+    if (particlesRef.current.length) {
+      drawParticles();
+      animationFrameRef.current = requestAnimationFrame(animate);
+    } else {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      animationFrameRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mediaQuery.matches) return;
+
+    ensureCanvasSize();
+    window.addEventListener('resize', ensureCanvasSize);
+
+    const scheduleAnimation = () => {
+      if (animationFrameRef.current === null) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      mouseMoveThrottleRef.current = (mouseMoveThrottleRef.current + 1) % 2;
+      if (mouseMoveThrottleRef.current !== 0) return;
+
+      const { clientX, clientY } = event;
+      const dx = clientX - lastMousePosRef.current.x;
+      const dy = clientY - lastMousePosRef.current.y;
+      const speed = Math.hypot(dx, dy);
+      const config = deviceConfigRef.current;
+      
+      // Responsive particle count
+      const baseParticleCount = speed > 25 ? 15 : speed > 18 ? 12 : speed > 10 ? 10 : speed > 5 ? 8 : 6;
+      const particleCount = Math.max(1, Math.floor(baseParticleCount * config.particleMultiplier));
+
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 1.2;
+        const spread = Math.random() * 0.7 * config.spreadMultiplier;
+        
+        const isStar = Math.random() < 0.55; // 55% chance of star (more than 50%)
+        const isBlurred = Math.random() < 0.45; // 45% chance of blur
+
+        particlesRef.current.push({
+          x: clientX + Math.cos(angle) * spread * 15 * config.spreadMultiplier,
+          y: clientY + Math.sin(angle) * spread * 15 * config.spreadMultiplier,
+          vx: Math.cos(angle) * (Math.random() * 1.5 + 0.6) + (Math.random() - 0.5) * 0.5,
+          vy: Math.sin(angle) * (Math.random() * 1.5 + 0.6) + (Math.random() - 0.5) * 0.5,
+          size: (Math.random() * 1.2 + 0.6) * config.sizeMultiplier,
+          opacity: Math.random() * 0.5 + 0.5,
+          life: 0,
+          maxLife: Math.random() * 600 + 400,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          isStar,
+          blurAmount: isBlurred ? (Math.random() * 4 + 2) * config.blurMultiplier : 0,
+        });
+      }
+
+      if (particlesRef.current.length > config.maxParticles) {
+        particlesRef.current.splice(0, particlesRef.current.length - config.maxParticles);
+      }
+
+      lastMousePosRef.current = { x: clientX, y: clientY };
+      scheduleAnimation();
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    // Animation loop
-    const animate = () => {
-      if (!containerRef.current) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-        return;
-      }
-
-      // Update and remove dead embers
-      trailEmbersRef.current = trailEmbersRef.current.filter((ember) => {
-        ember.life++;
-        ember.x += ember.vx;
-        ember.y += ember.vy;
-        
-        // Fade out as life increases
-        ember.opacity = Math.max(0, ember.opacity * 0.98);
-        
-        // Slow down over time
-        ember.vx *= 0.98;
-        ember.vy *= 0.98;
-        
-        return ember.life < ember.maxLife && ember.opacity > 0.05;
-      });
-
-      // Update DOM
-      const container = containerRef.current;
-      while (container.children.length < trailEmbersRef.current.length) {
-        const div = document.createElement('div');
-        div.className = 'absolute rounded-full';
-        div.style.transform = 'translate(-50%, -50%)';
-        container.appendChild(div);
-      }
-
-      // Remove excess DOM elements
-      while (container.children.length > trailEmbersRef.current.length) {
-        container.removeChild(container.lastChild!);
-      }
-
-      // Update each ember's position and style
-      trailEmbersRef.current.forEach((ember, index) => {
-        const element = container.children[index] as HTMLElement;
-        if (element) {
-          element.style.left = `${ember.x}px`;
-          element.style.top = `${ember.y}px`;
-          element.style.opacity = ember.opacity.toString();
-          element.style.backgroundColor = ember.color;
-          element.style.width = `${ember.size}px`;
-          element.style.height = `${ember.size}px`;
-          // Increased glow - larger spread and multiple shadow layers for more intensity
-          element.style.boxShadow = `0 0 ${ember.size * 4}px ${ember.color}, 0 0 ${ember.size * 8}px ${ember.color}40, 0 0 ${ember.size * 12}px ${ember.color}20`;
-          element.style.filter = 'blur(0.5px)';
-        }
-      });
-
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(animate);
-
     return () => {
+      window.removeEventListener('resize', ensureCanvasSize);
       window.removeEventListener('mousemove', handleMouseMove);
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
     };
   }, []);
 
-  return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 z-[100] pointer-events-none"
-    />
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 z-[100] pointer-events-none" />;
 };
 
 export default CursorTrail;
-
