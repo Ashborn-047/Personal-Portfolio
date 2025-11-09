@@ -1,26 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Hero background image path - using base URL for GitHub Pages
-const HERO_BG_PATH = `${import.meta.env.BASE_URL}hero-bg.png`;
+const HERO_BG_PATH = `${(import.meta as any).env?.BASE_URL || '/Personal-Portfolio/'}hero-bg.png`;
 
 export const Hero = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <section 
       className="relative h-screen min-h-[30rem] w-full flex items-center justify-center overflow-hidden"
       style={{
         backgroundImage: `url(${HERO_BG_PATH})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: isMobile ? 'right center' : 'center', // Show glowing object on mobile
+        backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* Subtle dark overlay to help particles show through */}
-      <div className="absolute inset-0 bg-[rgba(11,0,20,0.3)] z-[5] pointer-events-none"></div>
+      {/* Responsive dark overlay - lighter on mobile to show visual elements */}
+      <div className="absolute inset-0 bg-[rgba(11,0,20,0.15)] md:bg-[rgba(11,0,20,0.3)] z-[5] pointer-events-none"></div>
       
-      {/* Soft edge vignette effect */}
+      {/* Responsive vignette effect - less intense on mobile */}
       <div 
         className="absolute inset-0 z-[6] pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.4) 70%, rgba(11,0,20,0.8) 100%)',
+          background: isMobile 
+            ? 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.15) 70%, rgba(11,0,20,0.4) 100%)'
+            : 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.4) 70%, rgba(11,0,20,0.8) 100%)',
         }}
       ></div>
       
