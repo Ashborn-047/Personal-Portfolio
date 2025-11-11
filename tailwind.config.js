@@ -41,21 +41,33 @@ export default {
         // Section overlay shade
         'section-fade': 'rgba(19,19,31,0.8)',
 
-        // --- LIGHT MODE: Aurora Veil ---
-        'aurora-bg-start': '#f7e7ff', // pastel purple-peach start
-        'aurora-bg-mid':   '#fdf6f0', // peach beige mid
-        'aurora-bg-end':   '#e8f4ff', // soft teal end
-        'aurora-violet':   '#a88bff',
-        'aurora-coral':    '#ffb6a3',
-        'aurora-mint':     '#95f3e4',
-        'aurora-accent':   '#7e57c2', // Light mode accent title
-        'aurora-heading':  '#2a2335',
-        'aurora-body':     '#3d3751',
-        // Glass for light mode
-        'glass-bg-light': 'rgba(255,255,255,0.4)',
-        'glass-border-light': 'rgba(150,100,200,0.3)',
+        // --- LIGHT MODE: Aurora Veil | Mist & Dawn ---
+        'aurora-bg-start': '#F5F3FF', // Top: soft lavender
+        'aurora-bg-middle': '#E8DFF5', // Middle: soft purple
+        'aurora-bg-end': '#FFE8DB',   // Bottom: soft peach
+        'aurora-primary': '#7B61FF',  // Primary accent
+        'aurora-warm': '#FF7A5C',     // Warm accent
+        'aurora-muted': '#A8B6FF',    // Muted accent
+        'aurora-coral': '#FF7A5C',    // Warm accent (alias)
+        'aurora-lavender': '#7B61FF', // Primary accent (alias)
+        'aurora-text': '#1C1A26',     // Primary text
+        'aurora-text-secondary': '#4A4458', // Secondary text
+        'aurora-text-tertiary': '#6B6577',  // Tertiary text
+        'aurora-heading': '#1C1A26',  // Heading color
+        'aurora-body': '#1C1A26',
+        // Glass for light mode (Aurora Veil)
+        'glass-bg-light': 'rgba(255,255,255,0.25)',
+        'glass-border-light': 'rgba(162,180,255,0.2)',
+        'glass-shadow-light': 'rgba(28,26,38,0.08)',
+        // Violet-gray text for Aurora Veil
+        'aurora-text-violet': '#4A4458',
+        'aurora-text-gray': '#6B6B7A',
         // Soft section fade in light mode
         'section-fade-light': 'rgba(255,255,255,0.3)',
+        // Particle colors (white-gold dust)
+        'particle-gold': '#FFD700',
+        'particle-white': '#FFFFFF',
+        'particle-cream': '#FFF8DC',
       },
       // --- Background Gradients and Glows ---
       backgroundImage: {
@@ -66,6 +78,10 @@ export default {
         // --- LIGHT ---
         'hero-gradient-light': "linear-gradient(120deg, #f7e7ff 0%, #fdf6f0 60%, #e8f4ff 100%)",
         'hero-radial-glow-light': 'radial-gradient(ellipse at 50% 40%, #a88bff33 0%, transparent 70%)',
+        // Aurora Veil gradients
+        'aurora-gradient': 'linear-gradient(180deg, #F5F3FF 0%, #E8DFF5 50%, #FFE8DB 100%)',
+        'aurora-accent-gradient': 'linear-gradient(135deg, #7B61FF, #FF7A5C)',
+        'aurora-hero-gradient': 'linear-gradient(135deg, rgba(123,97,255,0.1), rgba(255,122,92,0.1))',
         // Section fade separators
         'section-separator-dark': "linear-gradient(to bottom, rgba(19,19,31,0.8), transparent)",
         'section-separator-light': "linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)",
@@ -80,6 +96,9 @@ export default {
         'button-glow': '0 0 15px var(--tw-shadow-color)',
         'button-hover-glow': '0 0 15px var(--tw-shadow-color)',
         'focus-glow': '0 0 10px var(--tw-shadow-color)',
+        // Aurora Veil light shadows
+        'light-diffusion': '0 4px 24px rgba(0,0,0,0.05)',
+        'glass-light': '0 8px 32px rgba(0,0,0,0.08)',
       },
       backdropBlur: {
         '20': '20px',

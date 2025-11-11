@@ -1,0 +1,43 @@
+.aurora-dark-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    #1F1033 0%,
+    #0B0014 60%,
+    #1A0C22 100%
+  );
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora-dark-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    1200px 700px at 0 0,
+    rgba(45, 31, 61, 0.13) 0%,
+    transparent 70%
+  ),
+  radial-gradient(
+    900px 600px at 100% 100%,
+    rgba(54, 34, 43, 0.13) 0%,
+    transparent 70%
+  );
+  opacity: 0.6;
+}
+
+.aurora-dark-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 48%,
+    rgba(179, 136, 235, 0.27) 0%,
+    transparent 70%
+  );
+  opacity: 0.4;
+}
+

@@ -231,6 +231,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     document.body.style.pointerEvents = 'none';
+    // Ensure dark background during loading, override any light mode styles
+    const originalBgColor = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = '#0b0b15';
 
     const timeline = async () => {
       await lineControls.start({
@@ -289,6 +292,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
     return () => {
       document.body.style.overflow = '';
       document.body.style.pointerEvents = '';
+      document.body.style.backgroundColor = originalBgColor;
     };
   }, [lineControls, bgControls, containerControls, onComplete]);
 
@@ -299,6 +303,9 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
         className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden pointer-events-none"
         initial={{ opacity: 1 }}
         animate={containerControls}
+        style={{
+          backgroundColor: '#0b0b15', // Dark background to override light mode
+        }}
       >
         <motion.div
           className="absolute inset-0"
@@ -308,6 +315,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ onComplete }) => {
             backgroundImage: `url(${(import.meta as any).env?.BASE_URL || '/Personal-Portfolio/'}loading-bg.jpg)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            backgroundColor: '#0b0b15', // Dark fallback background
           }}
         />
 

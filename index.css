@@ -4,19 +4,120 @@
 
 body {
   @apply antialiased;
-  background: linear-gradient(180deg, #1F1033 0%, #0B0014 60%, #1A0C22 100%);
+  /* Background removed - handled by theme-specific background components */
   color: #EDE8F6;
   position: relative;
+  transition: color 0.6s ease;
+}
+
+body[data-theme="light"] {
+  /* Background removed - handled by AuroraBackgroundLight component */
+  color: #1C1A26; /* Primary text */
+  font-weight: 300; /* Lighter font weight for body text */
+}
+
+body[data-theme="dark"] {
+  /* Background removed - handled by AuroraBackgroundDark component */
+  color: #EDE8F6;
+}
+
+body[data-theme="light"] h1,
+body[data-theme="light"] h2,
+body[data-theme="light"] h3,
+body[data-theme="light"] h4,
+body[data-theme="light"] h5,
+body[data-theme="light"] h6 {
+  color: #1C1A26; /* Primary text for headings */
+  font-weight: 400; /* Lighter font weight for headings */
+  text-shadow: 0 1px 4px rgba(255,255,255,0.15);
+}
+
+body[data-theme="light"] * {
+  transition: color 0.6s ease, background-color 0.6s ease, border-color 0.6s ease;
+}
+
+/* Light mode text color utilities */
+body[data-theme="light"] .text-primary {
+  color: #1C1A26;
+}
+
+body[data-theme="light"] .text-secondary {
+  color: #4A4458;
+}
+
+body[data-theme="light"] .text-tertiary {
+  color: #6B6577;
+}
+
+/* Light mode body text - lighter font weights */
+body[data-theme="light"] p,
+body[data-theme="light"] span,
+body[data-theme="light"] div,
+body[data-theme="light"] li {
+  font-weight: 300;
+}
+
+body[data-theme="light"] p.lead,
+body[data-theme="light"] p.text-lg {
+  font-weight: 400;
+}
+
+/* Light mode interactive states */
+body[data-theme="light"] .aurora-glass:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-color: rgba(162, 180, 255, 0.3) !important;
+  box-shadow: 0 4px 20px rgba(28, 26, 38, 0.12) !important;
+}
+
+body[data-theme="light"] button:hover,
+body[data-theme="light"] a:hover,
+body[data-theme="light"] .interactive:hover {
+  background-color: rgba(123, 97, 255, 0.08);
+  transition: background-color 0.2s ease;
+}
+
+body[data-theme="light"] button:active,
+body[data-theme="light"] a:active,
+body[data-theme="light"] .interactive:active {
+  background-color: rgba(123, 97, 255, 0.15);
+  transition: background-color 0.1s ease;
+}
+
+body[data-theme="light"] button:focus,
+body[data-theme="light"] a:focus,
+body[data-theme="light"] input:focus,
+body[data-theme="light"] textarea:focus,
+body[data-theme="light"] select:focus,
+body[data-theme="light"] .interactive:focus {
+  outline: 2px solid rgba(123, 97, 255, 0.4);
+  outline-offset: 2px;
+  transition: outline 0.2s ease;
+}
+
+body[data-theme="light"] button:focus-visible,
+body[data-theme="light"] a:focus-visible {
+  outline: 2px solid rgba(123, 97, 255, 0.4);
+  outline-offset: 2px;
+}
+
+/* Light mode text colors */
+body[data-theme="light"] .text-gradient {
+  background: linear-gradient(to right, #7B61FF, #FF7A5C, #7B61FF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url('/assets/noise-texture.png');
+  /* Noise texture removed - file not found */
+  /* background-image: url('/assets/noise-texture.png'); */
   opacity: 0.1;
   pointer-events: none;
   z-index: 0;
+  display: none; /* Hide since texture is missing */
 }
 
 @layer utilities {
@@ -30,6 +131,13 @@ body::after {
   
   .text-gradient-heading {
     background: linear-gradient(to right, #FF7B5C, #E86FFF);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  body[data-theme="light"] .text-gradient-heading {
+    background: linear-gradient(to right, #7B61FF, #FF7A5C);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -54,6 +162,74 @@ body::after {
     box-shadow: 0 0 10px rgba(255,123,92,0.05);
     transition: all 0.5s ease-out;
     color: #EDE8F6;
+  }
+
+  body[data-theme="light"] .glow-card {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(162, 180, 255, 0.2);
+    box-shadow: 0 2px 16px rgba(28, 26, 38, 0.08);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    color: #1C1A26;
+  }
+
+  body[data-theme="light"] .glow-card:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(162, 180, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(28, 26, 38, 0.12);
+  }
+
+  body[data-theme="light"] .glow-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(162,180,255,0.1), rgba(255,138,112,0.1), rgba(255,215,201,0.1));
+    animation: shimmer 15s linear infinite;
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+    will-change: transform;
+    transform: translateZ(0); /* Force GPU acceleration */
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%) translateZ(0); }
+    100% { transform: translateX(100%) translateZ(0); }
+  }
+
+  /* Aurora liquid glass morph style */
+  .aurora-glass {
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(162, 180, 255, 0.2) !important;
+    box-shadow: 0 2px 16px rgba(28, 26, 38, 0.08) !important;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    will-change: transform;
+    transform: translateZ(0); /* Force GPU acceleration */
+  }
+
+  .aurora-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(162,180,255,0.1), rgba(255,138,112,0.1), rgba(255,215,201,0.1));
+    animation: shimmer 15s linear infinite;
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .aurora-glass > * {
+    position: relative;
+    z-index: 2;
   }
   
   .glow-card::before {

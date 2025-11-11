@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Hero background image path - using base URL for GitHub Pages
 const HERO_BG_PATH = `${(import.meta as any).env?.BASE_URL || '/Personal-Portfolio/'}hero-bg.png`;
 
 export const Hero = () => {
+  const { theme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -26,23 +28,34 @@ export const Hero = () => {
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* Responsive dark overlay - lighter on mobile to show visual elements */}
-      <div className="absolute inset-0 bg-[rgba(11,0,20,0.15)] md:bg-[rgba(11,0,20,0.3)] z-[5] pointer-events-none"></div>
-      
-      {/* Responsive vignette effect - less intense on mobile */}
+      {/* Responsive overlay - adapts to theme */}
       <div 
-        className="absolute inset-0 z-[6] pointer-events-none"
+        className="absolute inset-0 z-[5] pointer-events-none transition-opacity duration-600"
         style={{
-          background: isMobile 
-            ? 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.15) 70%, rgba(11,0,20,0.4) 100%)'
-            : 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.4) 70%, rgba(11,0,20,0.8) 100%)',
+          background: theme === 'light' 
+            ? 'rgba(255,255,255,0.1)' 
+            : isMobile ? 'rgba(11,0,20,0.15)' : 'rgba(11,0,20,0.3)',
+        }}
+      ></div>
+      
+      {/* Responsive vignette effect - adapts to theme */}
+      <div 
+        className="absolute inset-0 z-[6] pointer-events-none transition-opacity duration-600"
+        style={{
+          background: theme === 'light'
+            ? 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.1) 70%, rgba(255,255,255,0.2) 100%)'
+            : isMobile 
+              ? 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.15) 70%, rgba(11,0,20,0.4) 100%)'
+              : 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.4) 70%, rgba(11,0,20,0.8) 100%)',
         }}
       ></div>
       
       {/* Hero Content */}
       <div className="relative z-20 flex flex-col items-center w-full px-4 text-center">
         <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-tight">
-          <div className="mb-2 text-[#EDE8F6]">
+          <div className={`mb-2 transition-colors duration-600 ${
+            theme === 'light' ? 'text-aurora-text' : 'text-[#EDE8F6]'
+          }`}>
             Exploring Ideas.
           </div>
           <div className="text-gradient">
@@ -50,7 +63,9 @@ export const Hero = () => {
           </div>
         </h1>
         
-        <p className="max-w-2xl mx-auto text-lg md:text-xl text-[#EDE8F6]/90">
+        <p className={`max-w-2xl mx-auto text-lg md:text-xl transition-colors duration-600 ${
+          theme === 'light' ? 'text-aurora-text/80' : 'text-[#EDE8F6]/90'
+        }`}>
           A creative technologist navigating the space between human-centered design and emergent technologies.
         </p>
       </div>

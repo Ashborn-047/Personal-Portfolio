@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
-import AboutSection from './components/Aboutsection';
-import PhilosophySection from './components/PhilosophySection';
-import ProjectsSection from './components/ProjectsSection';
-import InsightsSection from './components/InsightsSection';
-import ConnectSection from './components/ConnectSection';
-import Footer from './components/Footer';
-import { Hero } from './src/sections/Hero';
-import EmberBackground from './src/components/EmberBackground';
-import CursorTrail from './src/components/CursorTrail';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import LoadingScreen from './src/components/LoadingScreen';
+import AshEmberLayout from './src/layouts/AshEmberLayout';
+import AuroraLayout from './src/layouts/AuroraLayout';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +34,13 @@ const App: React.FC = () => {
     preloadAssets();
   }, []);
 
+  // Scroll to top when theme changes
+  useEffect(() => {
+    if (!isLoading) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [theme, isLoading]);
+
   const handleLoadingComplete = () => {
     // Small delay before showing content for smoother transition
     setTimeout(() => {
@@ -46,35 +48,35 @@ const App: React.FC = () => {
     }, 200);
   };
 
+  // Test pages removed - content integrated into AuroraLayout
+
   return (
     <div className="min-h-screen font-sans leading-relaxed">
       {isLoading && <LoadingScreen onComplete={handleLoadingComplete} />}
-      {!isLoading && (
-        <>
-          <EmberBackground />
-          <CursorTrail />
-        </>
-      )}
-      <div
-        style={{
-          opacity: isLoading ? 0 : 1,
-          visibility: isLoading ? 'hidden' : 'visible',
-          transition: 'opacity 0.8s ease-in-out, visibility 0.8s ease-in-out',
-          willChange: 'opacity',
-        }}
-      >
-        <Header />
-        <Hero />
-        <main className="container mx-auto px-6 md:px-12 lg:px-24">
-          <AboutSection />
-          <ProjectsSection />
-          <PhilosophySection />
-          <InsightsSection />
-          <ConnectSection />
-        </main>
-        <Footer />
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={theme}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        >
+          {theme === 'light' ? (
+            <AuroraLayout isLoading={isLoading} />
+          ) : (
+            <AshEmberLayout isLoading={isLoading} />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 };
 

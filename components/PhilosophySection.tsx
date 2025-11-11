@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, fadeInUp } from '../motionVariants';
 import { useEmberCursor } from '../src/hooks/useEmberCursor';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const principles = [
   {
@@ -19,6 +20,8 @@ const principles = [
 ];
 
 const PhilosophySection: React.FC = () => {
+  const { theme } = useTheme();
+  
   return (
     <section id="philosophy" className="py-24 md:py-32 relative section-background">
       <motion.div
@@ -40,10 +43,24 @@ const PhilosophySection: React.FC = () => {
                 <motion.div
                   ref={cardRef}
                   variants={fadeInUp}
-                  className="glow-card rounded-2xl p-6 sm:p-10 my-6 sm:my-12 text-center"
+                  className={`rounded-2xl p-6 sm:p-10 my-6 sm:my-12 text-center transition-all duration-600 ${
+                    theme === 'light' 
+                      ? 'bg-glass-bg-light backdrop-blur-md border border-glass-border-light shadow-light-diffusion'
+                      : 'glow-card'
+                  }`}
+                  style={theme === 'light' ? {
+                    background: 'rgba(255,255,255,0.55)',
+                    backdropFilter: 'blur(16px)',
+                    WebkitBackdropFilter: 'blur(16px)',
+                    boxShadow: '0 4px 24px rgba(0,0,0,0.05)',
+                  } : {}}
                 >
-                  <h3 className="text-xl font-bold mb-2 text-[#EDE8F6]">{principle.title}</h3>
-                  <p className="text-[#B8AEE6]">{principle.description}</p>
+                  <h3 className={`text-xl font-bold mb-2 transition-colors duration-600 ${
+                    theme === 'light' ? 'text-aurora-text' : 'text-[#EDE8F6]'
+                  }`}>{principle.title}</h3>
+                  <p className={`transition-colors duration-600 ${
+                    theme === 'light' ? 'text-aurora-text/70' : 'text-[#B8AEE6]'
+                  }`}>{principle.description}</p>
                 </motion.div>
               );
             };

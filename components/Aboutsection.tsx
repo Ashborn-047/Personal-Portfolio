@@ -2,13 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, fadeInLeft, fadeInUp } from '../motionVariants';
 import { useEmberCursor } from '../src/hooks/useEmberCursor';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 // ASSET_ABOUT_AVATAR: Replace with a path to your custom animated/illustrated avatar.
 // The avatar should be a stylized cartoon/anime character representing a creative technologist,
 // with a thoughtful vibe, possibly surrounded by faint visual motifs like gears or circuits.
-const ASSET_ABOUT_AVATAR = `${import.meta.env.BASE_URL}creator-avatar.png`;
+const ASSET_ABOUT_AVATAR = `${(import.meta as any).env?.BASE_URL || '/Personal-Portfolio/'}creator-avatar.png`;
 
 const AboutSection: React.FC = () => {
+  const { theme } = useTheme();
   const cardRef = useEmberCursor();
   
   return (
@@ -26,13 +28,25 @@ const AboutSection: React.FC = () => {
         >
           <div 
             ref={cardRef}
-            className="glow-card rounded-2xl p-6 sm:p-10 my-6 sm:my-12"
+            className={`rounded-2xl p-6 sm:p-10 my-6 sm:my-12 transition-all duration-600 ${
+              theme === 'light' 
+                ? 'bg-glass-bg-light backdrop-blur-md border border-glass-border-light shadow-light-diffusion'
+                : 'glow-card'
+            }`}
+            style={theme === 'light' ? {
+              background: 'rgba(255,255,255,0.55)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.05)',
+            } : {}}
           >
             <h2 className="text-3xl font-bold mb-6 relative">
               <span className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,123,92,0.1),transparent_70%)] blur-2xl opacity-50 -z-10"></span>
               <span className="text-gradient-heading relative z-10">From Curiosity to Creation</span>
             </h2>
-            <div className="space-y-4 text-[#B8AEE6] text-lg leading-relaxed">
+            <div className={`space-y-4 text-lg leading-relaxed transition-colors duration-600 ${
+              theme === 'light' ? 'text-aurora-text/80' : 'text-[#B8AEE6]'
+            }`}>
               <p>
                 My story began not with code, but with curiosity — <em>How does this work?</em>
               </p>

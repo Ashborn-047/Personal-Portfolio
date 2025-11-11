@@ -1,0 +1,99 @@
+/* From Uiverse.io by aymenthedeveloper - Modified for inverted theme colors */
+.toggle-btn {
+  --bg: transparent;
+  --fg: #212121;
+  background-color: transparent;
+  border-radius: 10px;
+  --dimensions: 50px;
+  width: var(--dimensions);
+  height: var(--dimensions);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-btn .main-circle {
+  --dimensions: 20px;
+  width: var(--dimensions);
+  height: var(--dimensions);
+  background: var(--fg-gradient, var(--fg));
+  border-radius: 50%;
+  position: absolute;
+  transition: transform 0.4s ease 0.2s, background 0.4s ease;
+}
+
+.toggle-btn .main-circle::after {
+  content: "";
+  background-color: var(--bg);
+  border-radius: 50%;
+  --dimensions: 15px;
+  width: var(--dimensions);
+  height: var(--dimensions);
+  position: absolute;
+  top: 1px;
+  right: -1px;
+  transform-origin: right top;
+  transform: scale(0);
+  transition: transform 0.4s ease 0.2s;
+}
+
+.toggle-btn .sun-rays {
+  display: grid;
+  place-items: center;
+  transition: transform 0.4s ease 0.2s;
+}
+
+.toggle-btn .sun-rays,
+.toggle-btn .sun-rays::after,
+.toggle-btn .sun-rays::before {
+  --width: 3px;
+  --height: 6px;
+  width: var(--width);
+  height: var(--height);
+  background-color: var(--fg);
+  position: absolute;
+  box-shadow: 0 16px 0 var(--fg), 0 -16px 0 var(--fg);
+}
+
+.toggle-btn .sun-rays::after {
+  content: "";
+  transform: rotate(120deg);
+}
+
+.toggle-btn .sun-rays::before {
+  content: "";
+  transform: rotate(240deg);
+}
+
+.toggle-btn:focus .main-circle {
+  transform: scale(1.2);
+}
+
+.toggle-btn:focus .main-circle::after {
+  transform: scale(1);
+}
+
+.toggle-btn:focus .sun-rays {
+  transition: transform 0.4s;
+  transform: scale(0);
+}
+
+/* Inverted colors based on current theme */
+.toggle-btn.theme-dark {
+  --bg: transparent;
+  --fg: #ff6f61; /* Ember orange for sun when in dark mode */
+  --fg-gradient: #ff6f61;
+}
+
+.toggle-btn.theme-light {
+  --bg: transparent;
+  --fg: #6D28D9; /* Purple for moon when in light mode */
+  --fg-gradient: linear-gradient(135deg, #6D28D9, #B88DF2); /* Purple to lavender gradient */
+}
+

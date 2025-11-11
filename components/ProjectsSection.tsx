@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { fadeInUp } from '../motionVariants';
 import { GithubIcon, ArrowUpRightIcon } from './Icons';
 import { useEmberCursor } from '../src/hooks/useEmberCursor';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 interface Project {
   title: string;
@@ -20,29 +21,30 @@ interface Project {
 const projects: Project[] = [
   {
     title: 'LifeSync — Your Rhythm, Reimagined',
-    description: 'A lifestyle synchronization app that blends wellness, time-tracking, and mindfulness into a single elegant interface.',
-    subtext: 'Designed and developed an adaptive interface that visualizes personal habits and emotional rhythms. Focused on gradient-based emotional states and dynamic lighting to enhance user mood perception.',
+    description: 'A lifestyle synchronization app that transforms how people understand their daily patterns—where wellness, budget-tracking, and mindfulness converge into a single, emotionally intelligent interface.',
+    subtext: 'Built an adaptive system that visualizes personal rhythms through gradient-based emotional states and dynamic lighting, creating an interface that doesn\'t just track habits—it reflects how you feel.',
     tags: ['React', 'Framer Motion', 'TailwindCSS', 'PWA Ready'],
-    githubLink: '#',
+    githubLink: 'https://github.com/Ashborn-047/Mobile_Test_app',
     liveLink: '#',
-    image: 'https://picsum.photos/seed/lifesync/800/600',
+    image: '/lifesync-mockup.png',
     accentGradient: 'from-[#8a2be2] to-[#2de2e6]',
     hoverGlow: '#a48ad6',
   },
   {
-    title: 'Webtoon Redesign — Stories in Motion',
-    description: 'A conceptual rework of the Webtoon reading experience with a cinematic, emotional scroll experience.',
-    subtext: 'Focused on clean typography, immersive story panels, and motion-driven transitions inspired by anime atmospheres.',
-    tags: ['Next.js', 'TailwindCSS', 'Framer Motion'],
-    githubLink: '#',
+    title: 'Webtoon Ecosystem Redesign — Stories in Motion',
+    description: 'A full-scale redesign of Webtoon\'s web ecosystem transforming fragmented user experiences into a unified, behaviorally driven storytelling platform.',
+    subtext: 'Focused on creator visibility, micro-personalization, and emotional UX, the project reimagines how users discover, connect, and engage with digital comics.\n\nResearch-backed redesign powered by 50+ data sources and UX psychology principles (Fogg Model, Hick\'s Law, Zeigarnik Effect).',
+    tags: ['Next.js', 'TypeScript', 'TailwindCSS', 'Framer Motion'],
+    githubLink: 'https://github.com/Ashborn-047/Webtoon-Ecosystem-Platform-Redesign-',
     liveLink: '#',
-    image: 'https://picsum.photos/seed/webtoon/800/600',
+    image: '/webtoon_mockup.png',
     accentGradient: 'from-[#ff6f61] to-[#ff9f91]',
     hoverGlow: '#ff6f61',
   },
 ];
 
 const ProjectCard: React.FC<{ project: Project; index: number }> = ({ project, index }) => {
+  const { theme } = useTheme();
   const isReversed = index % 2 !== 0;
   const cardRef = useEmberCursor();
 
@@ -69,18 +71,40 @@ const ProjectCard: React.FC<{ project: Project; index: number }> = ({ project, i
       
       {/* Text Column: Adjusted to 8/12 width on large screens */}
       <div className={`lg:col-span-8 text-center lg:text-left ${isReversed ? 'lg:text-right' : ''}`}>
-        <p className="text-[#FF7B5C] font-mono text-sm mb-2">Featured Project</p>
-        <h3 className="text-3xl font-bold mb-4 text-[#EDE8F6]">{project.title}</h3>
+        <p className={`font-mono text-sm mb-2 transition-colors duration-600 ${
+          theme === 'light' ? 'text-aurora-coral' : 'text-[#FF7B5C]'
+        }`}>Featured Project</p>
+        <h3 className={`text-3xl font-bold mb-4 transition-colors duration-600 ${
+          theme === 'light' ? 'text-aurora-text' : 'text-[#EDE8F6]'
+        }`}>{project.title}</h3>
         <div 
           ref={cardRef}
-          className="glow-card p-6 rounded-3xl mb-6"
+          className={`p-6 rounded-3xl mb-6 transition-all duration-600 ${
+            theme === 'light' 
+              ? 'bg-glass-bg-light backdrop-blur-md border border-glass-border-light shadow-light-diffusion'
+              : 'glow-card'
+          }`}
+          style={theme === 'light' ? {
+            background: 'rgba(255,255,255,0.55)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.05)',
+          } : {}}
         >
-          <p className="text-[#EDE8F6] mb-2">{project.description}</p>
-          <p className="text-[#B8AEE6] text-sm">{project.subtext}</p>
+          <p className={`mb-2 transition-colors duration-600 ${
+            theme === 'light' ? 'text-aurora-text' : 'text-[#EDE8F6]'
+          }`}>{project.description}</p>
+          <p className={`text-sm whitespace-pre-line transition-colors duration-600 ${
+            theme === 'light' ? 'text-aurora-text/70' : 'text-[#B8AEE6]'
+          }`}>{project.subtext}</p>
         </div>
         <div className={`flex flex-wrap gap-2 mb-6 ${isReversed ? 'lg:justify-end' : 'lg:justify-start'} justify-center`}>
           {project.tags.map((tag) => (
-            <span key={tag} className="px-3 py-1 bg-teal-glow/10 text-teal-glow text-xs font-mono rounded-full">
+            <span key={tag} className={`px-3 py-1 text-xs font-mono rounded-full transition-colors duration-600 ${
+              theme === 'light' 
+                ? 'bg-white/30 text-aurora-text border border-white/20'
+                : 'bg-teal-glow/10 text-teal-glow'
+            }`}>
               {tag}
             </span>
           ))}
@@ -88,13 +112,22 @@ const ProjectCard: React.FC<{ project: Project; index: number }> = ({ project, i
         <div className={`flex items-center gap-4 ${isReversed ? 'lg:justify-end' : 'lg:justify-start'} justify-center`}>
           {project.githubLink && (
             <motion.a href={project.githubLink} target="_blank" rel="noopener noreferrer" aria-label="GitHub" whileHover={{ scale: 1.1, color: project.hoverGlow }}>
-              <GithubIcon className="w-6 h-6 text-[#B8AEE6] transition-all duration-300 ember-glow-hover" />
+              <GithubIcon className={`w-6 h-6 transition-all duration-300 ${
+                theme === 'light' ? 'text-aurora-text/70 hover:text-aurora-coral' : 'text-[#B8AEE6] ember-glow-hover'
+              }`} />
             </motion.a>
           )}
           {project.liveLink && (
-            <motion.a href={project.liveLink} target="_blank" rel="noopener noreferrer" aria-label="Live Demo" whileHover={{ scale: 1.1 }} className="ember-glow-hover">
-              <ArrowUpRightIcon className="w-6 h-6 text-[#B8AEE6] transition-all duration-300" />
-            </motion.a>
+            <motion.div 
+              onClick={(e) => e.preventDefault()} 
+              aria-label="Live Demo" 
+              whileHover={{ scale: 1.1 }} 
+              className={`cursor-default ${theme === 'dark' ? 'ember-glow-hover' : ''}`}
+            >
+              <ArrowUpRightIcon className={`w-6 h-6 transition-all duration-300 ${
+                theme === 'light' ? 'text-aurora-text/70 hover:text-aurora-coral' : 'text-[#B8AEE6]'
+              }`} />
+            </motion.div>
           )}
         </div>
       </div>

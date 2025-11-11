@@ -1,0 +1,300 @@
+/* Light Mode Base Styles */
+body {
+  font-family: 'Inter', sans-serif;
+  /* Remove solid background - gradient will be applied to page container */
+  background: transparent;
+  color: #1f2937;
+  overflow-x: hidden;
+}
+
+/* --- AURORA EFFECT STYLES (More Prominent Pastel Mist) --- */
+.aurora-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  /* Remove solid background - let gradient show through */
+  background: transparent;
+}
+
+.aurora-background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/aurora-bg4.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 1;
+  z-index: 0;
+}
+
+/* Keyframes for slow, gentle movement (breathing/flowing) */
+@keyframes aurora-flow-1 {
+  0% {
+    transform: translate(0%, 0%) rotate(0deg) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(8%, -12%) rotate(4deg) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0%, 0%) rotate(0deg) scale(1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes aurora-flow-2 {
+  0% {
+    transform: translate(0%, 0%) rotate(0deg) scale(1.1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: translate(-8%, 8%) rotate(-4deg) scale(1.05);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(0%, 0%) rotate(0deg) scale(1.1);
+    opacity: 0.95;
+  }
+}
+
+/* Base styles for each aurora layer - larger, more amorphous blobs */
+/* Optional overlay layers - can be hidden if image is enough */
+.aurora-layer {
+  position: absolute;
+  width: 200vw;
+  height: 200vh;
+  filter: blur(80px);
+  opacity: 0.3; /* Reduced opacity since we're using image */
+  border-radius: 50%;
+  z-index: 1;
+  mix-blend-mode: overlay; /* Blend with image */
+}
+
+/* Layer 1: Lavender → Periwinkle (Cool Tone) - Top-left area */
+.layer-1 {
+  top: -40%;
+  left: -30%;
+  background: radial-gradient(
+    ellipse 80% 60% at 40% 50%,
+    rgba(150, 180, 255, 1) 0%,
+    rgba(180, 190, 255, 0.9) 20%,
+    rgba(200, 200, 255, 0.7) 35%,
+    rgba(220, 220, 255, 0.5) 50%,
+    rgba(240, 240, 255, 0.3) 65%,
+    transparent 80%
+  );
+  animation: aurora-flow-1 40s ease-in-out infinite alternate;
+}
+
+/* Layer 2: Coral → Peach (Warm Tone) - Bottom-right area */
+.layer-2 {
+  bottom: -40%;
+  right: -20%;
+  background: radial-gradient(
+    ellipse 70% 80% at 60% 50%,
+    rgba(255, 150, 150, 1) 0%,
+    rgba(255, 180, 160, 0.9) 15%,
+    rgba(255, 200, 170, 0.8) 30%,
+    rgba(255, 220, 190, 0.6) 45%,
+    rgba(255, 240, 210, 0.4) 60%,
+    transparent 75%
+  );
+  animation: aurora-flow-2 45s ease-in-out infinite alternate-reverse;
+}
+
+/* Layer 3: Pale Mint → Soft Rose (Blended Tone) - Center/mid-left */
+.layer-3 {
+  top: 25%;
+  left: 15%;
+  background: radial-gradient(
+    ellipse 90% 70% at 30% 50%,
+    rgba(150, 255, 200, 0.95) 0%,
+    rgba(180, 255, 220, 0.85) 15%,
+    rgba(220, 255, 240, 0.7) 30%,
+    rgba(255, 200, 230, 0.6) 45%,
+    rgba(255, 220, 240, 0.4) 60%,
+    rgba(255, 240, 250, 0.2) 75%,
+    transparent 85%
+  );
+  animation: aurora-flow-1 42s ease-in-out infinite alternate;
+  animation-delay: 7s;
+}
+
+/* --- CONTENT STYLES (Uiverse Card Style - Light Mode Adapted) --- */
+/* Spinning gradient circle animation - rotation only */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.content-card {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 1rem;
+  overflow: hidden;
+  background: transparent;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+/* Gradient layer that follows cursor - behind all content */
+.content-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle 400px at var(--mouse-x) var(--mouse-y),
+    rgba(147, 51, 234, 0.3),
+    rgba(251, 146, 60, 0.2),
+    transparent 70%
+  );
+  border-radius: 1rem;
+  z-index: 6;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-card:hover::before {
+  opacity: 1;
+}
+
+/* Inner layer with asymmetric rounded corners - almost completely transparent */
+.content-card::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  background: rgba(255, 255, 255, 0.02); /* Almost completely transparent */
+  border-radius: 0.75rem;
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 40px;
+  z-index: 5;
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  /* Glowing light shadow at bottom */
+  box-shadow: 0 20px 60px -10px rgba(147, 51, 234, 0.4),
+              0 20px 80px -15px rgba(251, 146, 60, 0.3);
+}
+
+/* Spinner wrapper - handles positioning */
+.content-card-spinner-wrapper {
+  position: absolute;
+  width: 128px;
+  height: 128px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1.5;
+  transition: left 0.3s ease-out, top 0.3s ease-out;
+  will-change: left, top;
+}
+
+/* Spinning gradient circle - matches Uiverse exactly */
+.content-card-spinner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(to top right, rgba(147, 51, 234, 0.7), rgba(251, 146, 60, 0.5));
+  animation: spin-slow 12s linear infinite;
+  filter: blur(1px);
+  box-shadow: 0 0 40px rgba(147, 51, 234, 0.3), 0 0 60px rgba(251, 146, 60, 0.2);
+}
+
+/* Edge gradient overlays - positioned based on sphere location */
+.content-card-edge-gradient {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1.2;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+.content-card-edge-gradient-top {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to bottom, rgba(147, 51, 234, 0.4), transparent);
+  opacity: 0;
+}
+
+.content-card-edge-gradient-bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to top, rgba(251, 146, 60, 0.4), transparent);
+  opacity: 0;
+}
+
+.content-card-edge-gradient-left {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 30%;
+  background: linear-gradient(to right, rgba(147, 51, 234, 0.4), transparent);
+  opacity: 0;
+}
+
+.content-card-edge-gradient-right {
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 30%;
+  background: linear-gradient(to left, rgba(251, 146, 60, 0.4), transparent);
+  opacity: 0;
+}
+
+/* Gradient overlay class - no longer needed but kept for compatibility */
+.content-card-gradient-overlay {
+  display: none;
+}
+
+/* Content wrapper - needs to be above gradient overlay */
+.content-card > *:not(.content-card-spinner):not(.content-card-edge-gradient):not(.content-card-spinner-wrapper):not(.content-card-gradient-overlay) {
+  position: relative;
+  z-index: 10;
+}
+
+/* Inner cards/boxes should definitely be above the gradient overlay */
+.content-card .bg-white\/40,
+.content-card .bg-white\/60,
+.content-card [class*="bg-white"],
+.content-card [class*="rounded-xl"]:not(.content-card-gradient-overlay):not(.content-card):not(.content-card::before):not(.content-card::after) {
+  position: relative;
+  z-index: 20 !important;
+  isolation: isolate;
+  pointer-events: auto;
+}
+
+/* All headings and text content above gradient */
+.content-card > h2,
+.content-card > h3,
+.content-card > p {
+  position: relative;
+  z-index: 10;
+}
+
+/* Divs with IDs should respect their parent's z-index if they're inner boxes */
+.content-card > div[id]:not([class*="bg-white"]):not([class*="rounded-xl"]) {
+  position: relative;
+  z-index: 10;
+}
+

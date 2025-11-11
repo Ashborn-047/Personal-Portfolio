@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const quotes = [
   'The best code is a conversation with your future self.',
@@ -9,6 +10,7 @@ const quotes = [
 ];
 
 const InsightsSection: React.FC = () => {
+  const { theme } = useTheme();
   const [quote, setQuote] = useState('');
 
   useEffect(() => {
@@ -24,7 +26,9 @@ const InsightsSection: React.FC = () => {
         </h2>
         <div className="h-24 flex items-center justify-center">
           {quote && (
-            <p className="text-2xl md:text-3xl font-medium text-[#EDE8F6] italic">
+            <p className={`text-2xl md:text-3xl font-medium italic transition-colors duration-600 ${
+              theme === 'light' ? 'text-aurora-text' : 'text-[#EDE8F6]'
+            }`}>
               &ldquo;{quote}&rdquo;
             </p>
           )}
