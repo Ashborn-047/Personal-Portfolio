@@ -4,10 +4,16 @@
 
 body {
   @apply antialiased;
-  /* Background removed - handled by theme-specific background components */
+  /* Fallback background - will be overridden by theme-specific background components */
+  background: #0b0c10;
   color: #EDE8F6;
   position: relative;
-  transition: color 0.6s ease;
+  transition: color 0.6s ease, background 0.6s ease;
+  min-height: 100vh;
+}
+
+body[data-theme="light"] {
+  background: linear-gradient(180deg, #F5F3FF 0%, #E8DFF5 50%, #FFE8DB 100%);
 }
 
 body[data-theme="light"] {
