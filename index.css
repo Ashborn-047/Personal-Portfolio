@@ -14,10 +14,6 @@ body {
 
 body[data-theme="light"] {
   background: linear-gradient(180deg, #F5F3FF 0%, #E8DFF5 50%, #FFE8DB 100%);
-}
-
-body[data-theme="light"] {
-  /* Background removed - handled by AuroraBackgroundLight component */
   color: #1C1A26; /* Primary text */
   font-weight: 300; /* Lighter font weight for body text */
 }
