@@ -14,8 +14,8 @@ export const AuroraHeader = () => {
         boxShadow: 'none',
       }}
     >
-      <nav className="container mx-auto px-6 md:px-12 lg:px-24 flex items-center justify-end h-20">
-        <div className="flex items-center gap-4">
+      <nav className="container mx-auto px-4 sm:px-6 md:px-12 lg:px-24 flex items-center justify-end h-16 sm:h-20">
+        <div className="flex items-center gap-4 relative z-50">
           <ThemeToggle />
         </div>
       </nav>
