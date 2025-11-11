@@ -169,7 +169,7 @@ const AuroraLayout: React.FC<AuroraLayoutProps> = ({ isLoading }) => {
         <section 
           className="relative min-h-screen flex items-center justify-center overflow-hidden"
           style={{
-            backgroundImage: 'url(/hero-light-bg.png)',
+            backgroundImage: `url(${(import.meta as any).env?.BASE_URL || '/Personal-Portfolio/'}hero-light-bg.png)`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
