@@ -99,6 +99,11 @@
   --bg: transparent;
   --fg: #ff6f61; /* Ember orange for sun when in dark mode */
   --fg-gradient: #ff6f61;
+  /* Add subtle background for better visibility on dark backgrounds */
+  background-color: rgba(31, 16, 51, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(255, 111, 97, 0.2);
 }
 
 .toggle-btn.theme-light {
@@ -117,6 +122,11 @@
   .toggle-btn.theme-light {
     background-color: rgba(255, 255, 255, 0.4);
     box-shadow: 0 2px 12px rgba(109, 40, 217, 0.3);
+  }
+  
+  .toggle-btn.theme-dark {
+    background-color: rgba(31, 16, 51, 0.4);
+    box-shadow: 0 2px 12px rgba(255, 111, 97, 0.3);
   }
 }
 

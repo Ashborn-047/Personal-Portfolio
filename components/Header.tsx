@@ -55,6 +55,9 @@ const Header: React.FC = React.memo(() => {
     >
       <nav className="container mx-auto px-6 md:px-12 lg:px-24 flex items-center justify-between h-20">
         <Logo />
+        <div className="flex md:hidden items-center">
+          <ThemeToggle />
+        </div>
         <div className="hidden md:flex items-center space-x-6">
           {navLinks.map((link) => (
             <motion.div
