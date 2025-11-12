@@ -33,7 +33,7 @@ export const Hero = () => {
         className="absolute inset-0 z-[5] pointer-events-none transition-opacity duration-600"
         style={{
           background: theme === 'light' 
-            ? (isMobile ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.5)')
+            ? (isMobile ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.7)')
             : isMobile ? 'rgba(11,0,20,0.15)' : 'rgba(11,0,20,0.3)',
         }}
       ></div>
@@ -44,8 +44,8 @@ export const Hero = () => {
         style={{
           background: theme === 'light'
             ? (isMobile 
-              ? 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.3) 70%, rgba(255,255,255,0.6) 100%)'
-              : 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.4) 70%, rgba(255,255,255,0.8) 100%)')
+              ? 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.9) 100%)'
+              : 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.95) 100%)')
             : isMobile 
               ? 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.15) 70%, rgba(11,0,20,0.4) 100%)'
               : 'radial-gradient(ellipse at center, transparent 0%, rgba(11,0,20,0.4) 70%, rgba(11,0,20,0.8) 100%)',
